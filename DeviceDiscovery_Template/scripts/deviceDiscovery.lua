@@ -1,18 +1,33 @@
+--[[----------------------------------------------------------------------------
+
+  Application Name:
+  DeviceDiscovery
+
+  Summary:
+  Introduction to device scanning and configuration.
+
+  Description:
+  This application can be used to scan specific network interfaces for SICK-devices.
+  It includes a specific user interface, which can be used to:
+    - specify the interface, which should be scanned.
+    - show the resuls of the scan in a table.
+      Scan results can be selected for configuration and indentification in the table. This will
+      automaticly fill the configuration and identify fields.
+    - configure a device.
+    - identify a device.
+
+  How to run:
+  Connect a web-browser to the device IP-Address and you will see the webpage of this sample.
+
+------------------------------------------------------------------------------]]
 
 --Start of Global Scope---------------------------------------------------------
 
 --serve events for access via the user interface
 Script.serveEvent("DeviceDiscovery.ScansChanged","ScansChanged")
 Script.serveEvent("DeviceDiscovery.SelectionChanged","SelectionChanged")
-Script.serveEvent("DeviceDiscovery.ScanRunningStateChanged", "ScanRunningStateChanged")
-Script.serveEvent("DeviceDiscovery.OnSpinnerStateChanged", "OnSpinnerStateChanged")
-
 Script.serveEvent("DeviceDiscovery.DHCPChanged","DHCPChanged")
-Script.serveEvent("DeviceDiscovery.OnMacAddressChanged", "OnMacAddressChanged")
-Script.serveEvent("DeviceDiscovery.OnIpAddressChanged", "OnIpAddressChanged")
-Script.serveEvent("DeviceDiscovery.OnSubnetMaskChanged", "OnSubnetMaskChanged")
-Script.serveEvent("DeviceDiscovery.OnDefaultGatewayChanged", "OnDefaultGatewayChanged")
-
+Script.serveEvent("DeviceDiscovery.ScanRunningStateChanged","ScanRunningStateChanged")
 
 --parameters used for configuring
 local configMacAddress = ""
@@ -29,7 +44,7 @@ local beepMAC = ""
 local deviceScanner = Command.Scan.create()
 
 --flag to trigger a demo-mode
-local demoMode = false
+local demoMode = true
 
 --currently used interface
 local currentInterface = "ALL"
@@ -96,23 +111,6 @@ local function getDevicesJSON(devices)
   return scans
 end
 
-local scanCurrentlyActive = false
---@updateSpinnerState(scanIsRunning:bool):void
-local function updateSpinnerState(scanIsRunning)
-  if scanIsRunning and not scanCurrentlyActive then
-    Script.notifyEvent("OnSpinnerStateChanged", "showSpinner")
-
-    print("showSpinner")
-    scanCurrentlyActive = true
-  else 
-    Script.notifyEvent("OnSpinnerStateChanged", "hideSpinner")
-    print("hideSpinner")
-  end
-end
-Script.register("DeviceDiscovery.ScanRunningStateChanged", updateSpinnerState)
-
-
-
 --@scan()
 --[[
 This function is used to scan for devices via the specified interface.
@@ -122,14 +120,13 @@ via the event "ScanChanged".
 local function scan()
   Script.notifyEvent("ScanRunningStateChanged",true)
   Script.notifyEvent("ScansChanged", "[]")
-
   local devices
   if(currentInterface == "ALL") then
     devices = multiScan(Engine.getEnumValues("EthernetInterfaces"))
   else
     devices = Command.Scan.scan(deviceScanner,5000)
   end
-
+  Script.notifyEvent("ScanRunningStateChanged",false)
   --build the JSON-string of the scan-results to be shown in the table
   local scans = "["
   if(currentInterface == "ALL") then
@@ -139,20 +136,16 @@ local function scan()
   else
     scans = scans .. getDevicesJSON(devices)
   end
-  
   if(scans:len() > 1) then
     scans = scans:sub(1, -2) .. "]"
   else
     scans = scans .. "]"
   end
-
-  currentScans = scans
   Script.notifyEvent("ScansChanged", scans)
-  Script.notifyEvent("ScanRunningStateChanged",false)
+  currentScans = scans
 end
 
-
---@config():
+--@config():bool
 local function config()
   --if demo-mode is activated, just print the parameters of the configuration
   if(demoMode) then
@@ -161,7 +154,7 @@ local function config()
     print(configSubnetMask)
     print(configDefaultGateway)
     print(configDhcpEnabled)
-    -- return configDhcpEnabled
+    return configDhcpEnabled
   else
     local success =
       Command.Scan.configure(
@@ -173,7 +166,7 @@ local function config()
       configDhcpEnabled
     )
     scan()
-    -- return success
+    return success
   end
 end
 
@@ -203,7 +196,6 @@ JSON-string. The values of the parmeters are then set as values of the
 global variables used for the configuration and beeping.
 --]]
 local function setSelectionToConfig(selection)
-  print("table record selected:\n"..selection)
   if(nil ~= selection) then
     Script.notifyEvent("SelectionChanged", selection)
     local macInd = selection:find("\"macAddress\":\"")
@@ -211,26 +203,18 @@ local function setSelectionToConfig(selection)
     local macEnd = selection:find("\"", macStart + 1) - 1
     configMacAddress = selection:sub(macStart, macEnd)
     beepMAC = configMacAddress
-    Script.notifyEvent("OnMacAddressChanged", configMacAddress)
-
     local ipInd = selection:find("\"ipAddress\":\"")
     local ipStart = ipInd + 13
     local ipEnd = selection:find("\"", ipStart + 1) - 1
     configIpAddress = selection:sub(ipStart, ipEnd)
-    Script.notifyEvent("OnIpAddressChanged", configIpAddress)
-
     local subnetInd = selection:find("\"subnetMask\":\"")
     local subnetStart = subnetInd + 14
     local subnetEnd = selection:find("\"", subnetStart + 1) - 1
     configSubnetMask = selection:sub(subnetStart, subnetEnd)
-    Script.notifyEvent("OnSubnetMaskChanged", configSubnetMask)
-
     local gatewayInd = selection:find("\"defaultGateway\":\"")
     local gatewayStart = gatewayInd + 18
     local gatewayEnd = selection:find("\"", gatewayStart + 1) - 1
     configDefaultGateway = selection:sub(gatewayStart, gatewayEnd)
-    Script.notifyEvent("OnDefaultGatewayChanged", configDefaultGateway)
-    
     local dhcpInd = selection:find("\"dhcpEnabled\":")
     local dhcpStart = dhcpInd + 14
     local dhcpEnd = selection:find("}", dhcpStart + 1) - 1
@@ -272,7 +256,7 @@ end
 
 --@setBeepTime(time:int)
 local function setBeepTime(time)
-  beepTime = tonumber(time)
+  beepTime = time
 end
 
 --@getBeepTime():int
@@ -340,7 +324,7 @@ end
 --servce functions for acces via the user interface
 Script.serveFunction("DeviceDiscovery.scan",scan)
 Script.serveFunction("DeviceDiscovery.setInterface",setInterface)
-Script.serveFunction("DeviceDiscovery.config", config)
+Script.serveFunction("DeviceDiscovery.config",config)
 Script.serveFunction("DeviceDiscovery.beep",beep)
 Script.serveFunction("DeviceDiscovery.setSelectionToConfig",setSelectionToConfig)
 Script.serveFunction("DeviceDiscovery.setConfigMacAddress",setConfigMacAddress)

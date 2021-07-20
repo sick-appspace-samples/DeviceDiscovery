@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <manifest>
-    <application name="DeviceDiscovery">
+    <application name="DeviceDiscovery_Template">
         <crown name="DeviceDiscovery">
             <desc>user script</desc>
             <serves>
@@ -16,23 +16,9 @@
                     <desc>No description yet...</desc>
                     <param desc="No description yet..." name="dhcpEnabled" type="bool"/>
                 </event>
-                <event name="OnMacAddressChanged">
-                    <param desc="" multiplicity="1" name="newMacAddress" type="string"/>
-                </event>
-                <event name="OnIpAddressChanged">
-                    <param desc="" multiplicity="1" name="newIpAddress" type="string"/>
-                </event>
-                <event name="OnSubnetMaskChanged">
-                    <param desc="" multiplicity="1" name="newSubnetMask" type="string"/>
-                </event>
-                <event name="OnDefaultGatewayChanged">
-                    <param desc="" multiplicity="1" name="newDefaultGateway" type="string"/>
-                </event>
                 <event name="ScanRunningStateChanged">
-                    <param desc="" multiplicity="1" name="scanIsRunning" type="bool"/>
-                </event>
-                <event name="OnSpinnerStateChanged">
-                    <param desc="" multiplicity="1" name="newState" type="string"/>
+                    <desc>No description yet...</desc>
+                    <param desc="No description yet..." name="running" type="bool"/>
                 </event>
                 <function name="scan">
                     <desc>No description yet...</desc>
@@ -40,6 +26,10 @@
                 <function name="setInterface">
                     <desc>No description yet...</desc>
                     <param desc="No description yet..." name="interface" type="string"/>
+                </function>
+                <function name="config">
+                    <desc>No description yet...</desc>
+                    <return desc="No description yet..." name="success" type="bool"/>
                 </function>
                 <function name="beep">
                     <desc>No description yet...</desc>
@@ -116,9 +106,6 @@
                 <function name="getCurrentScans">
                     <desc>No description yet...</desc>
                     <return desc="No description yet..." name="scans" type="string"/>
-                </function>
-                <function name="config">
-                    <desc/>
                 </function>
             </serves>
         </crown>

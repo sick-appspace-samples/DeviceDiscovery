@@ -52,10 +52,9 @@ local currentInterface = "ALL"
 --results of last scan
 local currentScans = "[]"
 
---@multiScan(interfaces:string[])
---[[
-Scan multiple interfaces at the same time
---]]
+---Scan multiple interfaces at the same time
+---@param interfaces EthernetInterfaces[]
+---@return Command.Scan.DeviceInfo[]
 local function multiScan(interfaces)
 
   local hTasks = {}
@@ -84,10 +83,9 @@ local function multiScan(interfaces)
   return(hDevices)
 end
 
---@getDevicesJSON(devices:userdata):string
---[[
-Create the string representing the devices for displaying in tabelview
---]]
+---Create the string representing the devices for displaying in tabelview
+---@param devices Command.Scan.DeviceInfo[]
+---@return string
 local function getDevicesJSON(devices)
   local scans = ""
   for _,value in pairs(devices) do
@@ -111,12 +109,9 @@ local function getDevicesJSON(devices)
   return scans
 end
 
---@scan()
---[[
-This function is used to scan for devices via the specified interface.
-After the scan is finished, the results are serialized into JSON and published
-via the event "ScanChanged".
---]]
+---This function is used to scan for devices via the specified interface.
+---After the scan is finished, the results are serialized into JSON and published
+---via the event "ScanChanged".
 local function scan()
   Script.notifyEvent("ScanRunningStateChanged",true)
   Script.notifyEvent("ScansChanged", "[]")
@@ -145,7 +140,7 @@ local function scan()
   currentScans = scans
 end
 
---@config():bool
+---@return bool
 local function config()
   --if demo-mode is activated, just print the parameters of the configuration
   if(demoMode) then
@@ -170,7 +165,7 @@ local function config()
   end
 end
 
---@beep():bool
+---@return bool
 local function beep()
   --if demo-mode is activated, just print the parameters of the beep
   if(demoMode) then
@@ -182,19 +177,17 @@ local function beep()
   end
 end
 
---@setInterface(interface:string)
+---@param interface EthernetInterfaces
 local function setInterface(interface)
   currentInterface = interface
   Command.Scan.setInterface(deviceScanner,interface)
 end
 
---@setSelectionToConfig(selection:string)
---[[
-This function is triggered, when the user selects a row in the table.
-It parses the parameters for the device-configuration out of the incoming
-JSON-string. The values of the parmeters are then set as values of the
-global variables used for the configuration and beeping.
---]]
+---This function is triggered, when the user selects a row in the table.
+---It parses the parameters for the device-configuration out of the incoming
+---JSON-string. The values of the parmeters are then set as values of the
+---global variables used for the configuration and beeping.
+---@param selection string
 local function setSelectionToConfig(selection)
   if(nil ~= selection) then
     Script.notifyEvent("SelectionChanged", selection)
@@ -228,54 +221,54 @@ local function setSelectionToConfig(selection)
   end
 end
 
---@setConfigMacAddress(macAddress:string)
+---@param macAddress string
 local function setConfigMacAddress(macAddress)
   configMacAddress = macAddress
 end
 
---@setConfigIpAddress(ipAddress:string)
+---@param ipAddress string
 local function setConfigIpAddress(ipAddress)
   configIpAddress = ipAddress
 end
 
---@setConfigSubnetMask(subnetMask:string)
+---@param subnetMask string
 local function setConfigSubnetMask(subnetMask)
   configSubnetMask = subnetMask
 end
 
---@setConfigDefaultGateway(defaultGateway:string)
+---@param defaultGateway string
 local function setConfigDefaultGateway(defaultGateway)
   configDefaultGateway = defaultGateway
 end
 
---@setConfigDHCPEnabled(dhcpEnabled:bool)
+---@param dhcpEnabled bool
 local function setConfigDHCPEnabled(dhcpEnabled)
   configDhcpEnabled = dhcpEnabled
   Script.notifyEvent("DHCPChanged", configDhcpEnabled)
 end
 
---@setBeepTime(time:int)
+---@param time int
 local function setBeepTime(time)
   beepTime = time
 end
 
---@getBeepTime():int
+---@return int
 local function getBeepTime()
   return beepTime
 end
 
---@setBeepMAC(macAddress:string)
+---@param macAddress string
 local function setBeepMAC(macAddress)
   beepMAC = macAddress
 end
 
---@getConfigDHCP():bool
+---@return bool
 local function getConfigDHCP()
   Script.notifyEvent("DHCPChanged", configDhcpEnabled)
   return configDhcpEnabled
 end
 
---@getInterfaces()
+---@return string
 local function getInterfaces()
   local interfaces = Engine.getEnumValues("EthernetInterfaces")
   local res = "[{\"label\":\"ALL\",\"value\":\"ALL\"}"
@@ -286,37 +279,37 @@ local function getInterfaces()
   return res
 end
 
---@getCurrentConfigMAC()
+---@return string
 local function getCurrentConfigMAC()
   return configMacAddress
 end
 
---@getCurrentConfigIP()
+---@return string
 local function getCurrentConfigIP()
   return configIpAddress
 end
 
---@getCurrentConfigSubnet()
+---@return string
 local function getCurrentConfigSubnet()
   return configSubnetMask
 end
 
---@getCurrentConfigGateway()
+---@return string
 local function getCurrentConfigGateway()
   return configDefaultGateway
 end
 
---@getCurrentConfigDHCP()
+---@return boolean
 local function getCurrentConfigDHCP()
   return configDhcpEnabled
 end
 
---@getCurrentInterface()
+---@return string
 local function getCurrentInterface()
   return currentInterface
 end
 
---@getCurrentScans()
+---@return string
 local function getCurrentScans()
   return currentScans
 end
